@@ -34,7 +34,22 @@ class Finetune(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, accuracy, f1_score, precision, recall = self._shared_eval_step(batch, batch_idx)
+        loss, true, pred = self._shared_eval_step(batch, batch_idx)
+        return loss, true, pred
+
+    def validation_epoch_end(self, validation_step_outputs):
+        all_outputs = torch.stack(validation_step_outputs)
+
+        loss = torch.mean(all_outputs[:, 0]) 
+        true = all_outputs[:, 1]
+        pred = all_outputs[:, 2]
+
+        cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
+
+        accuracy = round(cls_report['accuracy'], 2)
+        f1_score = round(cls_report['1']['f1-score'], 2)
+        precision = round(cls_report['1']['precision'], 2)
+        recall = round(cls_report['1']['recall'], 2)
 
         metrics = {}
         metrics['val_loss'] = round(loss.item(), 2)
@@ -43,12 +58,22 @@ class Finetune(pl.LightningModule):
         metrics['val_precision'] = precision
         metrics['val_recall'] = recall
 
+        print(metrics)
+
         self.log_dict(metrics, prog_bar=False, on_epoch=True)
 
-        return loss
-
     def test_step(self, batch, batch_idx):
-        loss, accuracy, f1_score, precision, recall = self._shared_eval_step(batch, batch_idx)
+        loss, true, pred = self._shared_eval_step(batch, batch_idx)
+        return loss, true, pred
+
+    def test_eopch_end(self, test_step_outputs):
+        all_outputs = torch.stack(test_step_outputs)
+
+        loss = torch.mean(all_outputs[:, 0]) 
+        true = all_outputs[:, 1]
+        pred = all_outputs[:, 2]
+
+        cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
         metrics = {}
         metrics['test_loss'] = round(loss.item(), 2)
@@ -71,14 +96,7 @@ class Finetune(pl.LightningModule):
         true = label_batch.to(torch.device("cpu"))
         pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
 
-        cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
-
-        accuracy = round(cls_report['accuracy'], 2)
-        f1_score = round(cls_report['1']['f1-score'], 2)
-        precision = round(cls_report['1']['precision'], 2)
-        recall = round(cls_report['1']['recall'], 2)
-
-        return loss, accuracy, f1_score, precision, recall
+        return loss, true, pred
 
     def predict_step(self, batch, batch_idx):
         input_ids, attention_mask = batch
