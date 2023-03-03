@@ -57,6 +57,8 @@ class Finetune(pl.LightningModule):
         metrics['test_precision'] = precision
         metrics['test_recall'] = recall
 
+        print(metrics)
+
         self.log_dict(metrics, prog_bar=False, on_epoch=True)
 
         return loss
