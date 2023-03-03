@@ -69,7 +69,7 @@ class Finetune(pl.LightningModule):
         true = label_batch.to(torch.device("cpu"))
         pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
 
-        cls_report = classification_report(true, pred, output_dict=True)
+        cls_report = classification_report(true, pred, output_dict=True, zero_division=0)
 
         accuracy = round(cls_report['accuracy'], 2)
         f1_score = round(cls_report['1']['f1-score'], 2)
