@@ -85,6 +85,11 @@ class Finetune(pl.LightningModule):
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
+        accuracy = round(cls_report['accuracy'], 2)
+        f1_score = round(cls_report['1']['f1-score'], 2)
+        precision = round(cls_report['1']['precision'], 2)
+        recall = round(cls_report['1']['recall'], 2)
+
         metrics = {}
         metrics['test_loss'] = round(loss.item(), 2)
         metrics['test_accuracy'] = accuracy
