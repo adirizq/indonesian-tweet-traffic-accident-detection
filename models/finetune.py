@@ -43,6 +43,7 @@ class Finetune(pl.LightningModule):
         pred = torch.Tensor().to(device='cuda')
         
         for output in validation_step_outputs:
+            print(output[0])
             loss = torch.stack((loss, output[0]), dim=0)
             true = torch.stack((loss, output[1]), dim=0)
             pred = torch.stack((loss, output[2]), dim=0)
