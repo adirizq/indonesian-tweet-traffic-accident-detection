@@ -43,9 +43,9 @@ class Finetune(pl.LightningModule):
         pred = torch.Tensor()
         
         for output in validation_step_outputs:
-            loss = torch.cat(loss, output[0])
-            true = torch.cat(loss, output[1])
-            pred = torch.cat(loss, output[2])
+            loss = torch.cat((loss, output[0]), 0)
+            true = torch.cat((loss, output[1]), 0)
+            pred = torch.cat((loss, output[2]), 0)
 
         print(loss)
         sys.exit()
