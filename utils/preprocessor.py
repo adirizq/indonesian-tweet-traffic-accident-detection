@@ -54,9 +54,6 @@ class TwitterDataModule(pl.LightningDataModule):
         x_input_ids, x_attention_mask, y = [], [], []
         for (text, label) in tqdm(dataset.values.tolist()):
 
-            encoded_label = [0, 0]
-            encoded_label[label] = 1
-
             encoded_text = self.tokenizer(text=text,
                                           max_length=self.max_length,
                                           padding="max_length",
@@ -64,7 +61,7 @@ class TwitterDataModule(pl.LightningDataModule):
 
             x_input_ids.append(encoded_text['input_ids'])
             x_attention_mask.append(encoded_text['attention_mask'])
-            y.append(encoded_label)
+            y.append(label)
 
         x_input_ids = torch.tensor(x_input_ids)
         x_attention_mask = torch.tensor(x_attention_mask)

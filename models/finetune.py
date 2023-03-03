@@ -67,7 +67,7 @@ class Finetune(pl.LightningModule):
         loss = outputs.loss
 
         true = label_batch.to(torch.device("cpu"))
-        pred = torch.argmax(F.softmax(outputs.logits), dim=1).to(torch.device("cpu"))
+        pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
 
         cls_report = classification_report(true, pred, output_dict=True)
 
@@ -82,6 +82,6 @@ class Finetune(pl.LightningModule):
         input_ids, attention_mask = batch
         outputs = self.model(input_ids, attention_mask)
 
-        pred = torch.argmax(F.softmax(outputs.logits), dim=1).to(torch.device("cpu"))
+        pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
 
         return pred[0]
