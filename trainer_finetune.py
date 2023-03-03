@@ -56,6 +56,7 @@ if __name__ == '__main__':
         default_root_dir=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}',
         callbacks=[checkpoint_callback, early_stop_callback, tqdm_progress_bar],
         logger=tensor_board_logger,
+        log_every_n_steps=5,
         deterministic=True  # To ensure reproducible results
     )
 
