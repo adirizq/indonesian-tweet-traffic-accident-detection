@@ -38,7 +38,7 @@ class Finetune(pl.LightningModule):
         return loss, true, pred
 
     def validation_epoch_end(self, validation_step_outputs):
-        print(validation_step_outputs[0])
+        print(validation_step_outputs[:, 1])
         sys.exit()
 
         all_outputs = torch.stack(validation_step_outputs)
