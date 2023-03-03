@@ -13,21 +13,42 @@ class Finetune(pl.LightningModule):
     def __init__(self, model, learning_rate=2e-5) -> None:
 
         super(Finetune, self).__init__()
-        # self.model = BertForSequenceClassification.from_pretrained(model, num_labels=num_classes, output_attentions=False, output_hidden_states=False)
         self.model = model
         self.lr = learning_rate
+
+        self.linear1 = nn.Linear(768, 64)
+        self.linear2 = nn.Linear(64, 1)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+        self.dropout = nn.Dropout(0.1)
+
+        self.criterion = nn.BCELoss()
+
+    def forward(self, input_ids, attention_mask):
+        bert_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
+
+        linear_output = self.linear1(bert_output.pooler_output)
+        relu_output = self.relu(linear_output)
+
+        dropout_output = self.dropout(relu_output)
+
+        linear_output = self.linear2(dropout_output)
+        sigmoid_output = self.sigmoid(linear_output)
+
+        return sigmoid_output
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         return optimizer
 
     def training_step(self, batch, batch_idx):
-        input_ids, attention_mask, label_batch = batch
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=label_batch)
-        loss = outputs.loss
+        input_ids, attention_mask, targets = batch
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
+
+        loss = self.criterion(outputs, targets)
 
         metrics = {}
-        metrics['train_loss'] = round(loss.item(), 2)
+        metrics['train_loss'] = round(loss.item(), 4)
 
         self.log_dict(metrics, prog_bar=False, on_epoch=True)
 
@@ -41,7 +62,7 @@ class Finetune(pl.LightningModule):
         loss = torch.Tensor().to(device='cuda')
         true = []
         pred = []
-        
+
         for output in validation_step_outputs:
             loss = torch.cat((loss, output[0].view(1)), dim=0)
             true += output[1].numpy().tolist()
@@ -51,13 +72,13 @@ class Finetune(pl.LightningModule):
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
-        accuracy = round(cls_report['accuracy'], 2)
-        f1_score = round(cls_report['1']['f1-score'], 2)
-        precision = round(cls_report['1']['precision'], 2)
-        recall = round(cls_report['1']['recall'], 2)
+        accuracy = round(cls_report['accuracy'], 4)
+        f1_score = round(cls_report['1']['f1-score'], 4)
+        precision = round(cls_report['1']['precision'], 4)
+        recall = round(cls_report['1']['recall'], 4)
 
         metrics = {}
-        metrics['val_loss'] = round(loss.item(), 2)
+        metrics['val_loss'] = round(loss.item(), 4)
         metrics['val_accuracy'] = accuracy
         metrics['val_f1_score'] = f1_score
         metrics['val_precision'] = precision
@@ -76,7 +97,7 @@ class Finetune(pl.LightningModule):
         loss = torch.Tensor().to(device='cuda')
         true = []
         pred = []
-        
+
         for output in test_step_outputs:
             loss = torch.cat((loss, output[0].view(1)), dim=0)
             true += output[1].numpy().tolist()
@@ -86,39 +107,37 @@ class Finetune(pl.LightningModule):
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
-        accuracy = round(cls_report['accuracy'], 2)
-        f1_score = round(cls_report['1']['f1-score'], 2)
-        precision = round(cls_report['1']['precision'], 2)
-        recall = round(cls_report['1']['recall'], 2)
+        accuracy = round(cls_report['accuracy'], 4)
+        f1_score = round(cls_report['1']['f1-score'], 4)
+        precision = round(cls_report['1']['precision'], 4)
+        recall = round(cls_report['1']['recall'], 4)
 
         metrics = {}
-        metrics['test_loss'] = round(loss.item(), 2)
+        metrics['test_loss'] = round(loss.item(), 4)
         metrics['test_accuracy'] = accuracy
         metrics['test_f1_score'] = f1_score
         metrics['test_precision'] = precision
         metrics['test_recall'] = recall
-
-        print()
-        print(metrics)
 
         self.log_dict(metrics, prog_bar=False, on_epoch=True)
 
         return loss
 
     def _shared_eval_step(self, batch, batch_idx):
-        input_ids, attention_mask, label_batch = batch
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=label_batch)
-        loss = outputs.loss
+        input_ids, attention_mask, targets = batch
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
 
-        true = label_batch.to(torch.device("cpu"))
-        pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
+        loss = self.criterion(outputs, targets)
+
+        true = targets.to(torch.device("cpu"))
+        pred = (outputs >= 0.5).int().to(torch.device("cpu"))
 
         return loss, true, pred
 
     def predict_step(self, batch, batch_idx):
         input_ids, attention_mask = batch
-        outputs = self.model(input_ids, attention_mask)
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
 
-        pred = torch.argmax(F.softmax(outputs.logits, dim=1), dim=1).to(torch.device("cpu"))
+        pred = (outputs >= 0.5).int().to(torch.device("cpu"))
 
         return pred[0]

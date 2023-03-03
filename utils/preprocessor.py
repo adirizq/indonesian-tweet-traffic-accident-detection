@@ -65,7 +65,7 @@ class TwitterDataModule(pl.LightningDataModule):
 
         x_input_ids = torch.tensor(x_input_ids)
         x_attention_mask = torch.tensor(x_attention_mask)
-        y = torch.tensor(y)
+        y = torch.tensor(y).float()
 
         del (dataset)
 
