@@ -71,7 +71,7 @@ class Finetune(pl.LightningModule):
         loss, true, pred = self._shared_eval_step(batch, batch_idx)
         return loss, true, pred
 
-    def test_eopch_end(self, test_step_outputs):
+    def test_epoch_end(self, test_step_outputs):
         loss = torch.Tensor().to(device='cuda')
         true = []
         pred = []
