@@ -35,7 +35,7 @@ class Finetune(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         loss, true, pred = self._shared_eval_step(batch, batch_idx)
-        return [loss, true, pred]
+        return torch.Tensor([loss, true, pred])
 
     def validation_epoch_end(self, validation_step_outputs):
         all_outputs = torch.stack(validation_step_outputs)
@@ -64,7 +64,7 @@ class Finetune(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         loss, true, pred = self._shared_eval_step(batch, batch_idx)
-        return [loss, true, pred]
+        return torch.Tensor([loss, true, pred])
 
     def test_eopch_end(self, test_step_outputs):
         all_outputs = torch.stack(test_step_outputs)
