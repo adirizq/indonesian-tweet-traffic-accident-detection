@@ -34,13 +34,14 @@ class TwitterDataModule(pl.LightningDataModule):
         else:
             print('[ Preprocessing Dataset ]')
             dataset = pd.read_csv(self.dataset_path)[["full_text", "is_accident"]]
-            dataset = dataset.dropna()
             dataset.columns = ["text", "label"]
+            dataset.dropna(subset=['text'], inplace=True)
 
             self.stop_words = StopWordRemoverFactory().get_stop_words()
 
             tqdm.pandas(desc='Preprocessing')
             dataset["text"] = dataset["text"].progress_apply(lambda x: self.clean_tweet(x))
+            dataset.dropna(subset=['text'], inplace=True)
             print('[ Preprocess Completed ]\n')
 
             print('[ Saving Preprocessed Dataset ]')
@@ -93,17 +94,17 @@ class TwitterDataModule(pl.LightningDataModule):
         result = re.sub(r'@\w+', '', result)  # remove user mention
         result = re.sub(r'http\S+', '', result)  # remove link
         result = re.sub(r'\d+', '', result)  # remove number
-        result = result.translate(str.maketrans('', '', string.punctuation))  # remove punctuation
+        result = re.sub(r'[^a-zA-Z ]', '', result)  # get only alphabets
         result = ' '.join([word for word in result.split() if word not in self.stop_words])  # remove stopword
+        result = result.strip()
 
-        return result.strip()
+        if result == '':
+            result = float('NaN')
+
+        return result
 
     def remove_emoji(self, text):
-        allchars = [str for str in text.decode('utf-8')]
-        emoji_list = [c for c in allchars if c in emoji.UNICODE_EMOJI]
-        clean_text = ' '.join([str for str in text.decode('utf-8').split() if not any(i in str for i in emoji_list)])
-
-        return clean_text
+        return emoji.replace_emoji(text, replace='')
 
     def setup(self, stage=None):
         train_data, valid_data, test_data = self.load_data()
