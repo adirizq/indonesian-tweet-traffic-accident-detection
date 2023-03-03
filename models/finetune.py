@@ -38,9 +38,9 @@ class Finetune(pl.LightningModule):
         return loss, true, pred
 
     def validation_epoch_end(self, validation_step_outputs):
-        loss = torch.Tensor()
-        true = torch.Tensor()
-        pred = torch.Tensor()
+        loss = torch.Tensor().to(device='gpu')
+        true = torch.Tensor().to(device='gpu')
+        pred = torch.Tensor().to(device='gpu')
         
         for output in validation_step_outputs:
             loss = torch.cat((loss, output[0]), 0)
