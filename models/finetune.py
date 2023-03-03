@@ -43,25 +43,11 @@ class Finetune(pl.LightningModule):
         pred = []
         
         for output in validation_step_outputs:
-            print(output[0])
             loss = torch.cat((loss, output[0].view(1)), dim=0)
             true += output[1].numpy().tolist()
             pred += output[2].numpy().tolist()
 
-        print(loss)
-
         loss = torch.mean(loss)
-        print(loss)
-
-        print(true)
-        print(pred)
-        sys.exit()
-
-        # all_outputs = torch.stack(validation_step_outputs)
-
-        # loss = torch.mean(all_outputs[:, 0]) 
-        # true = all_outputs[:, 1]
-        # pred = all_outputs[:, 2]
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
@@ -86,11 +72,16 @@ class Finetune(pl.LightningModule):
         return loss, true, pred
 
     def test_eopch_end(self, test_step_outputs):
-        all_outputs = torch.stack(test_step_outputs)
+        loss = torch.Tensor().to(device='cuda')
+        true = []
+        pred = []
+        
+        for output in test_step_outputs:
+            loss = torch.cat((loss, output[0].view(1)), dim=0)
+            true += output[1].numpy().tolist()
+            pred += output[2].numpy().tolist()
 
-        loss = torch.mean(all_outputs[:, 0]) 
-        true = all_outputs[:, 1]
-        pred = all_outputs[:, 2]
+        loss = torch.mean(loss)
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
