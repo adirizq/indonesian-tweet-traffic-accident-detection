@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', choices=['IndoBERT', 'IndoBERTweet', 'IndoRoBERTa_OSCAR', 'IndoRoBERTa_Wiki'], required=True, help='Pretrinaed model choices to train')
     parser.add_argument('-lr', '--learning_rate', type=float, default=2e-5, help='Learning rate')
     parser.add_argument('-b', '--batch_size', type=int, default=32, help='Batch size')
+    parser.add_argument('-l', '--max_length', type=int, default=128, help='Maximum sequence length')
 
     args = parser.parse_args()
     config = vars(args)
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     model_name = config['model']
     learning_rate = config['learning_rate']
     batch_size = config['batch_size']
+    max_length = config['max_length']
 
     pretrained_model_name = {
         'IndoBERT': 'indolem/indobert-base-uncased',
@@ -38,7 +40,7 @@ if __name__ == '__main__':
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
     pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], num_labels=2, output_attentions=False, output_hidden_states=False)
 
-    data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, batch_size=batch_size)
+    data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size)
     model = Finetune(model=pretrained_model, learning_rate=learning_rate)
 
     # Initialize callbacks and progressbar
