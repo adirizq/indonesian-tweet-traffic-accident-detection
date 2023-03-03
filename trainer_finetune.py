@@ -35,7 +35,7 @@ if __name__ == '__main__':
         'IndoRoBERTa_Wiki': 'flax-community/indonesian-roberta-base',
     }
 
-    pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name])
+    pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
     pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], num_labels=2, output_attentions=False, output_hidden_states=False)
 
     data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, batch_size=batch_size)
