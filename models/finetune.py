@@ -45,10 +45,14 @@ class Finetune(pl.LightningModule):
         for output in validation_step_outputs:
             print(output[0])
             loss = torch.cat((loss, output[0].view(1)), dim=0)
-            true.append(output[1])
-            pred.append(output[2])
+            true.append(output[1].numpy().tolist())
+            pred.append(output[2].numpy().tolist())
 
         print(loss)
+
+        loss = torch.mean(loss)
+        print(loss)
+
         print(true)
         print(pred)
         sys.exit()
