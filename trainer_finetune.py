@@ -33,8 +33,8 @@ if __name__ == '__main__':
     pretrained_model_name = {
         'IndoBERT': 'indolem/indobert-base-uncased',
         'IndoBERTweet': 'indolem/indobertweet-base-uncased',
-        'IndoRoBERTa_OSCAR': 'cahya/roberta-base-indonesian-522M',
-        'IndoRoBERTa_Wiki': 'flax-community/indonesian-roberta-base',
+        'IndoRoBERTa_OSCAR': 'flax-community/indonesian-roberta-base',
+        'IndoRoBERTa_Wiki': 'cahya/roberta-base-indonesian-522M',
     }
 
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
