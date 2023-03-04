@@ -48,7 +48,7 @@ class Finetune(pl.LightningModule):
         loss = self.criterion(outputs, targets)
 
         metrics = {}
-        metrics['train_loss'] = round(loss.item(), 4)
+        metrics['train_loss'] = loss.item()
 
         self.log_dict(metrics, prog_bar=False, on_epoch=True)
 
@@ -72,13 +72,13 @@ class Finetune(pl.LightningModule):
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
-        accuracy = round(cls_report['accuracy'], 4)
-        f1_score = round(cls_report['1']['f1-score'], 4)
-        precision = round(cls_report['1']['precision'], 4)
-        recall = round(cls_report['1']['recall'], 4)
+        accuracy = cls_report['accuracy']
+        f1_score = cls_report['1']['f1-score']
+        precision = cls_report['1']['precision']
+        recall = cls_report['1']['recall']
 
         metrics = {}
-        metrics['val_loss'] = round(loss.item(), 4)
+        metrics['val_loss'] = loss.item()
         metrics['val_accuracy'] = accuracy
         metrics['val_f1_score'] = f1_score
         metrics['val_precision'] = precision
@@ -107,13 +107,13 @@ class Finetune(pl.LightningModule):
 
         cls_report = classification_report(true, pred, labels=[0, 1], output_dict=True, zero_division=0)
 
-        accuracy = round(cls_report['accuracy'], 4)
-        f1_score = round(cls_report['1']['f1-score'], 4)
-        precision = round(cls_report['1']['precision'], 4)
-        recall = round(cls_report['1']['recall'], 4)
+        accuracy = cls_report['accuracy']
+        f1_score = cls_report['1']['f1-score']
+        precision = cls_report['1']['precision']
+        recall = cls_report['1']['recall']
 
         metrics = {}
-        metrics['test_loss'] = round(loss.item(), 4)
+        metrics['test_loss'] = loss.item()
         metrics['test_accuracy'] = accuracy
         metrics['test_f1_score'] = f1_score
         metrics['test_precision'] = precision
