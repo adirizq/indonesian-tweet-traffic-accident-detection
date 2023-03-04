@@ -6,7 +6,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from transformers import AutoTokenizer, AutoModel
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, TQDMProgressBar, EarlyStopping
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from utils.preprocessor import TwitterDataModule
 from models.finetune import Finetune
 
@@ -44,7 +44,8 @@ if __name__ == '__main__':
     model = Finetune(model=pretrained_model, learning_rate=learning_rate)
 
     # Initialize callbacks and progressbar
-    tensor_board_logger = TensorBoardLogger('logs', name=f'{model_name}/{batch_size}_{learning_rate}')
+    tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
+    csv_logger = TensorBoardLogger('csv_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
     checkpoint_callback = ModelCheckpoint(dirpath=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}', monitor='val_f1_score', mode='max')
     early_stop_callback = EarlyStopping(monitor='val_f1_score', min_delta=0.00, check_on_train_epoch_end=1, patience=3)
     tqdm_progress_bar = TQDMProgressBar()
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         max_epochs=20,
         default_root_dir=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}',
         callbacks=[checkpoint_callback, early_stop_callback, tqdm_progress_bar],
-        logger=tensor_board_logger,
+        logger=[tensor_board_logger, csv_logger],
         log_every_n_steps=5,
         deterministic=True  # To ensure reproducible results
     )
