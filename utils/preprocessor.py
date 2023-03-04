@@ -90,9 +90,9 @@ class TwitterDataModule(pl.LightningDataModule):
         result = re.sub(r'\n', ' ', result)  # remove new line
         result = re.sub(r'@\w+', ' user', result)  # remove user mention
         result = re.sub(r'http\S+', '', result)  # remove link
-        result = re.sub(r'\d+', '', result)  # remove number
-        result = re.sub(r'[^a-zA-Z ]', '', result)  # get only alphabets
-        result = ' '.join([word for word in result.split() if word not in self.stop_words])  # remove stopword
+        # result = re.sub(r'\d+', '', result)  # remove number
+        # result = re.sub(r'[^a-zA-Z ]', '', result)  # get only alphabets
+        # result = ' '.join([word for word in result.split() if word not in self.stop_words])  # remove stopword
         result = result.strip()
 
         if result == '':
