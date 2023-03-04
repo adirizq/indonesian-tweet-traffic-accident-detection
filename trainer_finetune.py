@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Initialize callbacks and progressbar
     tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
-    csv_logger = TensorBoardLogger('csv_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
+    csv_logger = CSVLogger('csv_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
     checkpoint_callback = ModelCheckpoint(dirpath=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}', monitor='val_f1_score', mode='max')
     early_stop_callback = EarlyStopping(monitor='val_f1_score', min_delta=0.00, check_on_train_epoch_end=1, patience=3)
     tqdm_progress_bar = TQDMProgressBar()
