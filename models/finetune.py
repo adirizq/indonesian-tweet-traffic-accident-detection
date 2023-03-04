@@ -16,8 +16,8 @@ class Finetune(pl.LightningModule):
         self.model = model
         self.lr = learning_rate
 
-        self.linear1 = nn.Linear(768, 64)
-        self.linear2 = nn.Linear(64, 1)
+        self.linear1 = nn.Linear(768, 32)
+        self.linear2 = nn.Linear(32, 1)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
         self.dropout = nn.Dropout(0.1)
