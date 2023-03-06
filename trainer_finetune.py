@@ -9,6 +9,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint, TQDMProgressBar, EarlyS
 from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from utils.preprocessor import TwitterDataModule
 from models.finetune import Finetune
+from textwrap import dedent
+
 
 
 if __name__ == '__main__':
@@ -29,6 +31,19 @@ if __name__ == '__main__':
     learning_rate = config['learning_rate']
     batch_size = config['batch_size']
     max_length = config['max_length']
+
+    print(dedent(f'''
+    -----------------------------------
+     Finetune Information        
+    -----------------------------------
+     Name                | Value       
+    -----------------------------------
+     Model Name          | {model_name}
+     Batch Size          | {batch_size}
+     Learning Rate       | {learning_rate}
+     Input Max Length    | {max_length} 
+    -----------------------------------
+    '''))
 
     pretrained_model_name = {
         'IndoBERT': 'indolem/indobert-base-uncased',
