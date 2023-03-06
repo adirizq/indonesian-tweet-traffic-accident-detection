@@ -40,7 +40,7 @@ if __name__ == '__main__':
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
     pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False)
 
-    data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size)
+    data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
     model = Finetune(model=pretrained_model, learning_rate=learning_rate)
 
     # Initialize callbacks and progressbar
