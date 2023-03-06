@@ -16,9 +16,9 @@ class Finetune(pl.LightningModule):
         self.model = model
         self.lr = learning_rate
 
-        self.linear1 = nn.Linear(768, 32)
-        self.linear2 = nn.Linear(32, 1)
-        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(768, 768)
+        self.linear2 = nn.Linear(768, 1)
+        self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
         self.dropout = nn.Dropout(0.1)
 
@@ -28,9 +28,9 @@ class Finetune(pl.LightningModule):
         bert_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
 
         linear_output = self.linear1(bert_output.pooler_output)
-        relu_output = self.relu(linear_output)
+        tanh_output = self.tanh(linear_output)
 
-        dropout_output = self.dropout(relu_output)
+        dropout_output = self.dropout(tanh_output)
 
         linear_output = self.linear2(dropout_output)
         sigmoid_output = self.sigmoid(linear_output)
