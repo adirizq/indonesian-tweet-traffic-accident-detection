@@ -127,6 +127,9 @@ class Finetune(pl.LightningModule):
         input_ids, attention_mask, targets = batch
         outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
 
+        print(outputs)
+        print(targets)
+
         loss = self.criterion(outputs, targets)
 
         true = targets.to(torch.device("cpu"))
