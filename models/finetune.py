@@ -126,8 +126,9 @@ class Finetune(pl.LightningModule):
     def _shared_eval_step(self, batch, batch_idx):
         input_ids, attention_mask, targets = batch
         outputs = self(input_ids=input_ids, attention_mask=attention_mask)
-        print(outputs.size())
-        outputs = torch.squeeze(outputs)
+
+        if len(outputs.size()) >= 2:
+            outputs = torch.squeeze(outputs)
 
         print(outputs.size())
         print(targets.size())
