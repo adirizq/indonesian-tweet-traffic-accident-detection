@@ -113,8 +113,6 @@ class TwitterDataModule(pl.LightningDataModule):
         # train_dataset, validation_dataset = torch.utils.data.random_split(train_validation_dataset, [train_size, validation_size], generator=torch.Generator().manual_seed(42))
         # print('[ Split Completed ]\n')
 
-        print(len(valid_dataset))
-
         return train_dataset, valid_dataset, test_dataset
 
     def clean_tweet(self, text):
