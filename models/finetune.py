@@ -127,7 +127,7 @@ class Finetune(pl.LightningModule):
         input_ids, attention_mask, targets = batch
         outputs = self(input_ids=input_ids, attention_mask=attention_mask)
 
-        print(len(outputs.size()))
+        print(outputs.size())
 
         if len(outputs.size()) >= 2:
             outputs = torch.squeeze(outputs)
