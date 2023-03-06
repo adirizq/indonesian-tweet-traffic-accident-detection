@@ -1,5 +1,6 @@
 __pycache__/
 .ipynb_checkpoints/
-logs/
+tensorboard_logs/
+csv_logs/
 checkpoints/
 results/
