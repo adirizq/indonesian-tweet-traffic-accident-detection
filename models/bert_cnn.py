@@ -66,7 +66,7 @@ class BERTFamilyCNN(pl.LightningModule):
         pooler_cnn_out = torch.cat([logits, pooler_output], 1)
 
         # Pass the output to
-        dense = self.hidden2dense(dropout_out)
+        dense = self.hidden2dense(pooler_cnn_out)
         relu_out = self.relu(dense)
         dropout_out = self.dropout(relu_out)
 
