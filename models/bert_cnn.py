@@ -14,7 +14,7 @@ class BERTFamilyCNN(pl.LightningModule):
                  model,
                  learning_rate=2e-5,
                  in_channels=4,
-                 out_channels=256,
+                 out_channels=32,
                  window_sizes=[3, 4, 5],
                  embedding_size=768,) -> None:
 
@@ -22,7 +22,7 @@ class BERTFamilyCNN(pl.LightningModule):
         self.model = model
         self.lr = learning_rate
         self.dropout_prob = 0.5
-        self.relu_dim_list = [1024, 256, 128, 64, 32]
+        self.relu_dim_list = [512, 256, 128, 64, 32]
 
         self.conv2d = nn.ModuleList([
             nn.Conv2d(in_channels, out_channels, [window_size, embedding_size], padding=(window_size - 1, 0)) for window_size in window_sizes
