@@ -25,9 +25,14 @@ class Finetune(pl.LightningModule):
         self.criterion = nn.BCELoss()
 
     def forward(self, input_ids, attention_mask):
-        model_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
+        bert_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
 
-        linear_output = self.linear1(model_output.logits)
+        linear_output = self.linear1(bert_output.pooler_output)
+        relu_output = self.relu(linear_output)
+
+        dropout_output = self.dropout(relu_output)
+
+        linear_output = self.linear2(dropout_output)
         sigmoid_output = self.sigmoid(linear_output)
 
         return sigmoid_output

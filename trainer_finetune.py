@@ -3,14 +3,13 @@ import sys
 import argparse
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForSequenceClassification
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, TQDMProgressBar, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from utils.preprocessor import TwitterDataModule
 from models.finetune import Finetune
 from textwrap import dedent
-
 
 
 if __name__ == '__main__':
@@ -53,7 +52,7 @@ if __name__ == '__main__':
     }
 
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
-    pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False)
+    pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=1)
 
     data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
     model = Finetune(model=pretrained_model, learning_rate=learning_rate)
