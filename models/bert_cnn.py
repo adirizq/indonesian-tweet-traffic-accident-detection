@@ -29,17 +29,8 @@ class BERTFamilyCNN(pl.LightningModule):
         ])
 
         # FC classifier
-        self.hidden2dense = nn.Linear(out_channels * len(window_sizes) + 768, self.relu_dim_list[0])
-
-        modules = []
-        for i in range(len(self.relu_dim_list) - 1):
-            modules.append(nn.Linear(self.relu_dim_list[i], self.relu_dim_list[i + 1]))
-            modules.append(nn.ReLU())
-            modules.append(nn.Dropout(self.dropout_prob))
-        dense2label = nn.Linear(self.relu_dim_list[-1], 1)
-        modules.append(dense2label)
-
-        self.classifier = nn.Sequential(*modules)
+        self.hidden2dense = nn.Linear(out_channels * len(window_sizes) + 768, 512)
+        self.classifier = nn.Linear(512, 1)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(self.dropout_prob)
