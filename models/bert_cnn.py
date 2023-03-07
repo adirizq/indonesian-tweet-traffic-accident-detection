@@ -14,34 +14,44 @@ class BERTFamilyCNN(pl.LightningModule):
                  model,
                  learning_rate=2e-5,
                  in_channels=4,
-                 out_channels=40,
+                 out_channels=256,
                  window_sizes=[3, 4, 5],
                  embedding_size=768,) -> None:
 
         super(BERTFamilyCNN, self).__init__()
         self.model = model
         self.lr = learning_rate
-
-        self.linear1 = nn.Linear(768, 32)
-        self.linear2 = nn.Linear(32, 1)
-        self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
-        self.dropout = nn.Dropout(0.1)
-
-        self.linear_to_concat = nn.Linear(768, 120)
-        self.classifier = nn.Linear(240, 1)
+        self.dropout_prob = 0.5
+        self.relu_dim_list = [1024, 256, 128, 64, 32]
 
         self.conv2d = nn.ModuleList([
             nn.Conv2d(in_channels, out_channels, [window_size, embedding_size], padding=(window_size - 1, 0)) for window_size in window_sizes
         ])
+
+        # FC classifier
+        self.hidden2dense = nn.Linear(out_channels * len(window_sizes) + 768, self.relu_dim_list[0])
+
+        modules = []
+        for i in range(len(self.relu_dim_list) - 1):
+            modules.append(nn.Linear(self.relu_dim_list[i], self.relu_dim_list[i + 1]))
+            modules.append(nn.ReLU())
+            modules.append(nn.Dropout(self.dropout_prob))
+        dense2label = nn.Linear(self.relu_dim_list[-1], 1)
+        modules.append(dense2label)
+
+        self.classifier = nn.Sequential(*modules)
+
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(self.dropout_prob)
+        self.sigmoid = nn.Sigmoid()
 
         self.criterion = nn.BCELoss()
 
     def forward(self, input_ids, attention_mask):
         model_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
 
-        pooler_output = self.linear_to_concat(model_output.pooler_output)
-        hs_output = torch.stack(model_output.hidden_states, dim=1)[:, -4:]
+        pooler_output = model_output.pooler_output
+        hs_output = torch.stack(model_output.hidden_states, dim=1)[:, -4:, 1:]
 
         out_conv = []
 
@@ -55,11 +65,15 @@ class BERTFamilyCNN(pl.LightningModule):
         logits = torch.cat(out_conv, 1).squeeze(-1)
         pooler_cnn_out = torch.cat([logits, pooler_output], 1)
 
+        # Pass the output to
         dropout_out = self.dropout(pooler_cnn_out)
-        classifier_out = self.classifier(dropout_out)
-        sigmoid_out = self.sigmoid(classifier_out)
+        dense = self.hidden2dense(dropout_out)
+        relu_out = self.relu(dense)
+        dropout_out = self.dropout(relu_out)
 
-        return sigmoid_out
+        classifier_out = self.classifier(dropout_out)
+
+        return self.sigmoid(classifier_out)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
