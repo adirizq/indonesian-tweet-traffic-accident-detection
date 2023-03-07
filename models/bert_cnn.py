@@ -21,7 +21,7 @@ class BERTFamilyCNN(pl.LightningModule):
         super(BERTFamilyCNN, self).__init__()
         self.model = model
         self.lr = learning_rate
-        self.dropout_prob = 0.5
+        self.dropout_prob = 0.1
         self.relu_dim_list = [512, 128, 32]
 
         self.conv2d = nn.ModuleList([
