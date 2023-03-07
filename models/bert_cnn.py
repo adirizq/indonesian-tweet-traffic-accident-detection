@@ -14,7 +14,7 @@ class BERTFamilyCNN(pl.LightningModule):
                  model,
                  learning_rate=2e-5,
                  in_channels=4,
-                 out_channels=32,
+                 out_channels=64,
                  window_sizes=[3, 4, 5],
                  embedding_size=768,) -> None:
 
