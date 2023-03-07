@@ -26,10 +26,7 @@ class Finetune(pl.LightningModule):
 
     def forward(self, input_ids, attention_mask):
         model_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
-
-        linear_output = self.linear1(model_output.logits)
-        sigmoid_output = self.sigmoid(linear_output)
-
+        sigmoid_output = self.sigmoid(model_output.logits)
         return sigmoid_output
 
     def configure_optimizers(self):
