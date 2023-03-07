@@ -9,6 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, TQDMProgressBar, EarlyS
 from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from utils.preprocessor import TwitterDataModule
 from models.finetune import Finetune
+from models.bert_cnn import BERTFamilyCNN
 from textwrap import dedent
 
 
@@ -21,6 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('-lr', '--learning_rate', type=float, default=2e-5, help='Learning rate')
     parser.add_argument('-b', '--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('-l', '--max_length', type=int, default=128, help='Maximum sequence length')
+    parser.add_argument('-c', '--custom', type=bool, default=False, help='Model type, Custom or Normal')
 
     args = parser.parse_args()
     config = vars(args)
@@ -30,6 +32,7 @@ if __name__ == '__main__':
     learning_rate = config['learning_rate']
     batch_size = config['batch_size']
     max_length = config['max_length']
+    custom = config['custom']
 
     print(dedent(f'''
     -----------------------------------
@@ -41,6 +44,7 @@ if __name__ == '__main__':
      Batch Size          | {batch_size}
      Learning Rate       | {learning_rate}
      Input Max Length    | {max_length} 
+     Is Custom Model     | {custom} 
     -----------------------------------
     '''))
 
@@ -52,10 +56,15 @@ if __name__ == '__main__':
     }
 
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
-    pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=1)
+
+    if custom:
+        pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=True)
+        model = BERTFamilyCNN(model=pretrained_model, learning_rate=learning_rate)
+    else:
+        pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=1)
+        model = Finetune(model=pretrained_model, learning_rate=learning_rate)
 
     data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
-    model = Finetune(model=pretrained_model, learning_rate=learning_rate)
 
     # Initialize callbacks and progressbar
     tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}/{batch_size}_{learning_rate}')

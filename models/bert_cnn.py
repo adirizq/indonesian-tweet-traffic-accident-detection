@@ -8,11 +8,17 @@ from transformers import BertForSequenceClassification
 from sklearn.metrics import classification_report
 
 
-class Finetune(pl.LightningModule):
+class BERTFamilyCNN(pl.LightningModule):
 
-    def __init__(self, model, learning_rate=2e-5) -> None:
+    def __init__(self,
+                 model,
+                 learning_rate=2e-5,
+                 in_channels=4,
+                 out_channels=40,
+                 window_sizes=[3, 4, 5],
+                 embedding_size=768,) -> None:
 
-        super(Finetune, self).__init__()
+        super(BERTFamilyCNN, self).__init__()
         self.model = model
         self.lr = learning_rate
 
@@ -22,11 +28,38 @@ class Finetune(pl.LightningModule):
         self.sigmoid = nn.Sigmoid()
         self.dropout = nn.Dropout(0.1)
 
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.linear_to_concat = nn.Linear(768, 120)
+        self.classifier = nn.Linear(240, 1)
+
+        self.conv2d = nn.ModuleList([
+            nn.Conv2d(in_channels, out_channels, [window_size, embedding_size], padding=(window_size - 1, 0)) for window_size in window_sizes
+        ])
+
+        self.criterion = nn.BCELoss()
 
     def forward(self, input_ids, attention_mask):
         model_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
-        return model_output.logits
+
+        pooler_output = self.linear_to_concat(model_output.pooler_output)
+        hs_output = torch.stack(model_output.hidden_states, dim=1)[:, -4:]
+
+        out_conv = []
+
+        for conv in self.conv2d:
+            x = conv(hs_output)
+            x = self.relu(x)
+            x = x.squeeze(-1)
+            x = F.max_pool1d(x, x.size(2))
+            out_conv.append(x)
+
+        logits = torch.cat(out_conv, 1).squeeze(-1)
+        pooler_cnn_out = torch.cat([logits, pooler_output], 1)
+
+        dropout_out = self.dropout(pooler_cnn_out)
+        classifier_out = self.classifier(dropout_out)
+        sigmoid_out = self.sigmoid(classifier_out)
+
+        return sigmoid_out
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
