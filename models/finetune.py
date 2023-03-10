@@ -37,7 +37,7 @@ class Finetune(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_ids, attention_mask, targets = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
 
         loss = self.criterion(outputs, targets)
 
@@ -119,7 +119,7 @@ class Finetune(pl.LightningModule):
 
     def _shared_eval_step(self, batch, batch_idx):
         input_ids, attention_mask, targets = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
 
         loss = self.criterion(outputs, targets)
 
@@ -130,7 +130,7 @@ class Finetune(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         input_ids, attention_mask = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask))
+        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
 
         pred = (torch.sigmoid(outputs) >= 0.5).int().to(torch.device("cpu"))
 
