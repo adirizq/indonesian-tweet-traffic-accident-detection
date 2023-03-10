@@ -10,6 +10,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 from utils.preprocessor import TwitterDataModule
 from models.finetune import Finetune
 from models.bert_cnn import BERTFamilyCNN
+from models.finetune_vanilla import FinetuneVanilla
 from textwrap import dedent
 
 
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('-l', '--max_length', type=int, default=128, help='Maximum sequence length')
     parser.add_argument('-c', '--custom', type=bool, default=False, help='Model type, Custom or Normal')
+    parser.add_argument('-v', '--vanilla', type=bool, default=False, help='Is it vannilla')
 
     args = parser.parse_args()
     config = vars(args)
@@ -33,6 +35,7 @@ if __name__ == '__main__':
     batch_size = config['batch_size']
     max_length = config['max_length']
     custom = config['custom']
+    vanilla = config['vanilla']
 
     print(dedent(f'''
     -----------------------------------
@@ -45,6 +48,7 @@ if __name__ == '__main__':
      Learning Rate       | {learning_rate}
      Input Max Length    | {max_length} 
      Is Custom Model     | {custom} 
+     Is Vanilla          | {vanilla} 
     -----------------------------------
     '''))
 
@@ -57,27 +61,34 @@ if __name__ == '__main__':
 
     pretrained_tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name[model_name], use_fast=False)
 
+    vanilla_text = ''
+
     if custom:
         pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=True)
         model = BERTFamilyCNN(model=pretrained_model, learning_rate=learning_rate)
+        data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
+    elif vanilla:
+        pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=2)
+        model = FinetuneVanilla(model=pretrained_model, learning_rate=learning_rate)
+        data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True, one_hot_label=True)
+        vanilla_text = '_vanilla'
     else:
         pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=1)
         model = Finetune(model=pretrained_model, learning_rate=learning_rate)
-
-    data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
+        data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
 
     # Initialize callbacks and progressbar
-    tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
-    csv_logger = CSVLogger('csv_logs', name=f'{model_name}/{batch_size}_{learning_rate}')
-    checkpoint_callback = ModelCheckpoint(dirpath=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}', monitor='val_f1_score', mode='max')
+    tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}{vanilla_text}/{batch_size}_{learning_rate}')
+    csv_logger = CSVLogger('csv_logs', name=f'{model_name}{vanilla_text}/{batch_size}_{learning_rate}')
+    checkpoint_callback = ModelCheckpoint(dirpath=f'./checkpoints/{model_name}{vanilla_text}/{batch_size}_{learning_rate}', monitor='val_f1_score', mode='max')
     early_stop_callback = EarlyStopping(monitor='val_f1_score', min_delta=0.00, check_on_train_epoch_end=1, patience=3, mode='max')
     tqdm_progress_bar = TQDMProgressBar()
 
     # Initialize Trainer
     trainer = Trainer(
         accelerator='gpu',
-        max_epochs=20,
-        default_root_dir=f'./checkpoints/{model_name}/{batch_size}_{learning_rate}',
+        max_epochs=50,
+        default_root_dir=f'./checkpoints/{model_name}{vanilla_text}/{batch_size}_{learning_rate}',
         callbacks=[checkpoint_callback, early_stop_callback, tqdm_progress_bar],
         logger=[tensor_board_logger, csv_logger],
         log_every_n_steps=5,

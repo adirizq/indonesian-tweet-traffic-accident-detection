@@ -15,7 +15,7 @@ from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFacto
 
 class TwitterDataModule(pl.LightningDataModule):
 
-    def __init__(self, tokenizer, max_length=128, batch_size=32, recreate=False) -> None:
+    def __init__(self, tokenizer, max_length=128, batch_size=32, recreate=False, one_hot_label=False) -> None:
 
         super(TwitterDataModule, self).__init__()
 
@@ -24,6 +24,7 @@ class TwitterDataModule(pl.LightningDataModule):
         self.max_length = max_length
         self.batch_size = batch_size
         self.recreate = recreate
+        self.one_hot_label = one_hot_label
         self.train_dataset_path = "datasets/train.csv"
         self.validation_dataset_path = "datasets/validation.csv"
         self.test_dataset_path = "datasets/test.csv"
@@ -65,6 +66,11 @@ class TwitterDataModule(pl.LightningDataModule):
         test_x_input_ids, test_x_attention_mask, test_y = [], [], []
 
         for (text, label, step) in tqdm(dataset.values.tolist()):
+
+            if self.one_hot_label:
+                default = [0]*2
+                default[label] = 1
+                label = default 
 
             encoded_text = self.tokenizer(text=text,
                                           max_length=self.max_length,
