@@ -19,14 +19,17 @@ class Finetune(pl.LightningModule):
         self.linear1 = nn.Linear(768, 32)
         self.linear2 = nn.Linear(32, 1)
         self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
         self.dropout = nn.Dropout(0.1)
 
         self.criterion = nn.BCEWithLogitsLoss()
 
     def forward(self, input_ids, attention_mask):
         model_output = self.model(input_ids=input_ids, attention_mask=attention_mask)
-        return model_output.logits
+        linear_output = self.linear1(model_output.pooler_output)
+        relu_output = self.relu(linear_output)
+        linear_output = self.linear2(relu_output)
+
+        return linear_output
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -34,7 +37,7 @@ class Finetune(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         input_ids, attention_mask, targets = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
+        outputs = self(input_ids=input_ids, attention_mask=attention_mask)
 
         loss = self.criterion(outputs, targets)
 
@@ -116,19 +119,19 @@ class Finetune(pl.LightningModule):
 
     def _shared_eval_step(self, batch, batch_idx):
         input_ids, attention_mask, targets = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
+        outputs = self(input_ids=input_ids, attention_mask=attention_mask)
 
         loss = self.criterion(outputs, targets)
 
         true = targets.to(torch.device("cpu"))
-        pred = (outputs >= 0.5).int().to(torch.device("cpu"))
+        pred = (torch.sigmoid(outputs) >= 0.5).int().to(torch.device("cpu"))
 
         return loss, true, pred
 
     def predict_step(self, batch, batch_idx):
         input_ids, attention_mask = batch
-        outputs = torch.squeeze(self(input_ids=input_ids, attention_mask=attention_mask), dim=1)
+        outputs = self(input_ids=input_ids, attention_mask=attention_mask)
 
-        pred = (outputs >= 0.5).int().to(torch.device("cpu"))
+        pred = (torch.sigmoid(outputs) >= 0.5).int().to(torch.device("cpu"))
 
         return pred[0]

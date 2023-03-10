@@ -67,15 +67,16 @@ if __name__ == '__main__':
         pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=True)
         model = BERTFamilyCNN(model=pretrained_model, learning_rate=learning_rate)
         data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
-    elif vanilla:
-        pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=2)
-        model = FinetuneVanilla(model=pretrained_model, learning_rate=learning_rate)
-        data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True, one_hot_label=True)
-        vanilla_text = '_vanilla'
     else:
-        pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=1)
-        model = Finetune(model=pretrained_model, learning_rate=learning_rate)
-        data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
+        if vanilla:
+            pretrained_model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False, num_labels=2)
+            model = FinetuneVanilla(model=pretrained_model, learning_rate=learning_rate)
+            data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True, one_hot_label=True)
+            vanilla_text = '_vanilla'
+        else:
+            pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=False)
+            model = Finetune(model=pretrained_model, learning_rate=learning_rate)
+            data_module = TwitterDataModule(tokenizer=pretrained_tokenizer, max_length=max_length, batch_size=batch_size, recreate=True)
 
     # Initialize callbacks and progressbar
     tensor_board_logger = TensorBoardLogger('tensorboard_logs', name=f'{model_name}{vanilla_text}/{batch_size}_{learning_rate}')
