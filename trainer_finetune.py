@@ -63,7 +63,7 @@ if __name__ == '__main__':
     with_cnn_str = ''
 
     if cnn:
-        with_cnn_str = 'CNN'
+        with_cnn_str = '_CNN'
         if version == 1:
             pretrained_model = AutoModel.from_pretrained(pretrained_model_name[model_name], output_attentions=False, output_hidden_states=True)
             model = FinetuneWithCNNv1(model=pretrained_model, learning_rate=learning_rate)
