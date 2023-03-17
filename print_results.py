@@ -29,4 +29,4 @@ for architecture in tqdm(architectures):
         data['recall'].append(round(test['test_recall'].values[0] * 100, 2))
 
 df = pd.DataFrame(data)
-df.to_csv('csv_logs/results.csv', index=False)
+df.to_csv('results.csv', index=False)
